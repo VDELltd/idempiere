@@ -23,12 +23,18 @@ fi
 echo -------------------------------------
 echo Re-Create DB user
 echo -------------------------------------
-sqlplus -S "$1"@"$ADEMPIERE_DB_SERVER":"$ADEMPIERE_DB_PORT"/"$ADEMPIERE_DB_NAME" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/CreateUser.sql "$2" "$3"
+if [ "$ADEMPIERE_DB_SERVER" = "" ]
+  then
+    DB_CONNECTION="$ADEMPIERE_DB_NAME"
+  else
+    DB_CONNECTION="$ADEMPIERE_DB_SERVER":"$ADEMPIERE_DB_PORT"/"$ADEMPIERE_DB_NAME"
+fi
+sqlplus -S "$1"@"$DB_CONNECTION" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/CreateUser.sql "$2" "$3"
 
 echo -------------------------------------
 echo Re-Create DataPump directory
 echo -------------------------------------
-sqlplus -S "$1"@"$ADEMPIERE_DB_SERVER":"$ADEMPIERE_DB_PORT"/"$ADEMPIERE_DB_NAME" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/CreateDataPumpDir.sql "$IDEMPIERE_HOME"/data
+sqlplus -S "$1"@"$DB_CONNECTION" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/CreateDataPumpDir.sql "$DATA_ENDPOINT" "$IDEMPIERE_HOME"/data
 # Note the user running this script must be member of dba group:  usermod -G dba idempiere
 chgrp dba "$IDEMPIERE_HOME"/data
 chmod 770 "$IDEMPIERE_HOME"/data
@@ -38,10 +44,10 @@ chmod 640 "$IDEMPIERE_HOME"/data/ExpDat.dmp
 echo -------------------------------------
 echo Import ExpDat
 echo -------------------------------------
-impdp "$2"/"$3"@"$ADEMPIERE_DB_SERVER":"$ADEMPIERE_DB_PORT"/"$ADEMPIERE_DB_NAME" DIRECTORY=ADEMPIERE_DATA_PUMP_DIR DUMPFILE=ExpDat.dmp SCHEMAS="$2"
+impdp "$2"/"$3"@"$DB_CONNECTION" DIRECTORY=ADEMPIERE_DATA_PUMP_DIR DUMPFILE="$DATA_ENDPOINT"ExpDat.dmp SCHEMAS="$2" CREDENTIAL=NULL
 
 echo -------------------------------------
 echo Check System
 echo Import may show some warnings. This is OK as long as the following does not show errors
 echo -------------------------------------
-sqlplus -S "$2"/"$3"@"$ADEMPIERE_DB_SERVER":"$ADEMPIERE_DB_PORT"/"$ADEMPIERE_DB_NAME" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/AfterImport.sql
+sqlplus -S "$2"/"$3"@"$DB_CONNECTION" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/AfterImport.sql

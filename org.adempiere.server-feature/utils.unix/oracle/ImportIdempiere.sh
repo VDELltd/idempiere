@@ -23,13 +23,19 @@ fi
 echo -------------------------------------
 echo Re-Create DB user
 echo -------------------------------------
-echo sqlplus -S "$1"@"$ADEMPIERE_DB_SERVER":"$ADEMPIERE_DB_PORT"/"$ADEMPIERE_DB_NAME" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/CreateUser.sql "$2" "$3"
-sqlplus -S "$1"@"$ADEMPIERE_DB_SERVER":"$ADEMPIERE_DB_PORT"/"$ADEMPIERE_DB_NAME" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/CreateUser.sql "$2" "$3"
+if [ "$ADEMPIERE_DB_SERVER" = "" ]
+  then
+    DB_CONNECTION="$ADEMPIERE_DB_NAME"
+  else
+    DB_CONNECTION="$ADEMPIERE_DB_SERVER":"$ADEMPIERE_DB_PORT"/"$ADEMPIERE_DB_NAME"
+fi
+echo sqlplus -S "$1"@"$DB_CONNECTION" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/CreateUser.sql "$2" "$3"
+sqlplus -S "$1"@"$DB_CONNECTION" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/CreateUser.sql "$2" "$3"
 
 echo -------------------------------------
 echo Re-Create DataPump directory
 echo -------------------------------------
-sqlplus -S "$1"@"$ADEMPIERE_DB_SERVER":"$ADEMPIERE_DB_PORT"/"$ADEMPIERE_DB_NAME" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/CreateDataPumpDir.sql "$IDEMPIERE_HOME"/data/seed
+sqlplus -S "$1"@"$DB_CONNECTION" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/CreateDataPumpDir.sql "$SEED_ENDPOINT" "$IDEMPIERE_HOME"/data/seed
 # Note the user running this script must be member of dba group:  usermod -G dba idempiere
 chgrp dba "$IDEMPIERE_HOME"/data
 chmod 770 "$IDEMPIERE_HOME"/data
@@ -41,12 +47,12 @@ chmod 640 "$IDEMPIERE_HOME"/data/seed/Adempiere.dmp
 echo -------------------------------------
 echo Import Adempiere.dmp
 echo -------------------------------------
-echo "impdp $1@$ADEMPIERE_DB_SERVER:$ADEMPIERE_DB_PORT/$ADEMPIERE_DB_NAME DIRECTORY=ADEMPIERE_DATA_PUMP_DIR DUMPFILE=Adempiere.dmp REMAP_SCHEMA=reference:$2"
-impdp "$2"/"$3"@"$ADEMPIERE_DB_SERVER":"$ADEMPIERE_DB_PORT"/"$ADEMPIERE_DB_NAME" DIRECTORY=ADEMPIERE_DATA_PUMP_DIR DUMPFILE=Adempiere.dmp REMAP_SCHEMA=reference:"$2"
+echo impdp "$1"@"$DB_CONNECTION" DIRECTORY=ADEMPIERE_DATA_PUMP_DIR DUMPFILE="$SEED_ENDPOINT"Adempiere.dmp REMAP_SCHEMA=reference:"$2" CREDENTIAL=NULL
+impdp "$1"@"$DB_CONNECTION" DIRECTORY=ADEMPIERE_DATA_PUMP_DIR DUMPFILE="$SEED_ENDPOINT"Adempiere.dmp REMAP_SCHEMA=reference:"$2" CREDENTIAL=NULL
 
 echo -------------------------------------
 echo Check System
 echo Import may show some warnings. This is OK as long as the following does not show errors
 echo -------------------------------------
-echo sqlplus -S "$2"/"$3"@"$ADEMPIERE_DB_SERVER":"$ADEMPIERE_DB_PORT"/"$ADEMPIERE_DB_NAME" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/AfterImport.sql
-sqlplus -S "$2"/"$3"@"$ADEMPIERE_DB_SERVER":"$ADEMPIERE_DB_PORT"/"$ADEMPIERE_DB_NAME" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/AfterImport.sql
+echo sqlplus -S "$2"/"$3"@"$DB_CONNECTION" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/AfterImport.sql
+sqlplus -S "$2"/"$3"@"$DB_CONNECTION" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/AfterImport.sql

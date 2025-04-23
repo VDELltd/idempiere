@@ -24,11 +24,17 @@ fi
 echo -------------------------------------
 echo Re-Create DataPump directory
 echo -------------------------------------
-sqlplus -S "$1"@"$ADEMPIERE_DB_SERVER":"$ADEMPIERE_DB_PORT"/"$ADEMPIERE_DB_NAME" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/CreateDataPumpDir.sql "$IDEMPIERE_HOME"/data
+if [ "$ADEMPIERE_DB_SERVER" = "" ]
+  then
+    DB_CONNECTION="$ADEMPIERE_DB_NAME"
+  else
+    DB_CONNECTION="$ADEMPIERE_DB_SERVER":"$ADEMPIERE_DB_PORT"/"$ADEMPIERE_DB_NAME"
+fi
+sqlplus -S "$1"@"$DB_CONNECTION" @"$IDEMPIERE_HOME"/utils/"$ADEMPIERE_DB_PATH"/CreateDataPumpDir.sql "$DATA_ENDPOINT" "$IDEMPIERE_HOME"/data
 chgrp dba "$IDEMPIERE_HOME"/data
 chmod 770 "$IDEMPIERE_HOME"/data
 
-expdp "$1"@"$ADEMPIERE_DB_SERVER":"$ADEMPIERE_DB_PORT"/"$ADEMPIERE_DB_NAME" DIRECTORY=ADEMPIERE_DATA_PUMP_DIR DUMPFILE=ExpDatFull_"$DATE".dmp LOGFILE=ExpDatFull_"$DATE".log EXCLUDE=STATISTICS FULL=Y
+expdp "$1"@"$DB_CONNECTION" DIRECTORY=ADEMPIERE_DATA_PUMP_DIR DUMPFILE="$DATA_ENDPOINT"ExpDatFull_"$DATE".dmp LOGFILE="$DATA_ENDPOINT"ExpDatFull_"$DATE".log EXCLUDE=STATISTICS FULL=Y CREDENTIAL=NULL
 
 cd "$IDEMPIERE_HOME"/data || exit
 jar cvfM ExpDatFull.jar ExpDatFull_"$DATE".dmp  ExpDatFull_"$DATE".log

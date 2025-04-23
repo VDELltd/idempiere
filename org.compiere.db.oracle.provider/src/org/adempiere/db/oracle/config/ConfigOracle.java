@@ -320,22 +320,22 @@ public class ConfigOracle implements IDatabaseConfig
 		}
 		if (monitor != null)
 			monitor.update(new DBConfigStatus(DBConfigStatus.DATABASE_SERVER, "ErrorDatabaseServer",
-				pass, true, error));
+				pass, false, error));
 		if (log.isLoggable(Level.INFO)) log.info("OK: Database Server = " + databaseServer);
-		data.setProperty(ConfigurationData.ADEMPIERE_DB_SERVER, databaseServer!=null ? databaseServer.getHostName() : null);
+		data.setProperty(ConfigurationData.ADEMPIERE_DB_SERVER, databaseServer!=null ? databaseServer.getHostName() : "");
 		//store as lower case for better script level backward compatibility
 		data.setProperty(ConfigurationData.ADEMPIERE_DB_TYPE, data.getDatabaseType());
 		data.setProperty(ConfigurationData.ADEMPIERE_DB_PATH, data.getDatabaseType().toLowerCase());
 
 		//	Database Port
 		int databasePort = data.getDatabasePort();
-		pass = data.testPort (databaseServer, databasePort, true);
+		pass = pass ? data.testPort (databaseServer, databasePort, true) : false;
 		error = "DB Server Port = " + databasePort;
 		if (monitor != null)
 			monitor.update(new DBConfigStatus(DBConfigStatus.DATABASE_SERVER, "ErrorDatabasePort",
-				pass, true, error));
-		if (!pass)
-			return error;
+				pass, false, error));
+		// if (!pass)
+		// 	return error;
 		if (log.isLoggable(Level.INFO)) log.info("OK: Database Port = " + databasePort);
 		data.setProperty(ConfigurationData.ADEMPIERE_DB_PORT, String.valueOf(databasePort));
 
@@ -357,9 +357,10 @@ public class ConfigOracle implements IDatabaseConfig
 		}
 		//
 		//	URL (derived)	jdbc:oracle:thin:@//prod1:1521/prod1
-		String url = "jdbc:oracle:thin:@//" + databaseServer.getHostName()
-			+ ":" + databasePort
-			+ "/" + databaseName;
+		String url = "jdbc:oracle:thin:@"
+			+ (server != null && server.length() > 0
+				? "//" + databaseServer.getHostName() + ":" + databasePort + "/" + databaseName
+				: databaseName);
 		pass = testJDBC(url, p_db.getSystemUser(), systemPassword);
 		error = "Error connecting: " + url
 			+ " - as "+ p_db.getSystemUser() + "/" + systemPassword;
@@ -435,9 +436,9 @@ public class ConfigOracle implements IDatabaseConfig
 		if (testFile != null) {
 			//	TNS Name Info via sqlplus
 			String sqlplus = "sqlplus " + p_db.getSystemUser() + "/" + systemPassword + "@"
-				+ "//" + databaseServer.getHostName()
-				+ ":" + databasePort
-				+ "/" + databaseName
+				+ (server != null && server.length() > 0
+					? "//" + databaseServer.getHostName() + ":" + databasePort + "/" + databaseName
+					: databaseName)
 				+ " @" + testFile;
 			log.config(sqlplus);
 			pass = testSQL(sqlplus);
