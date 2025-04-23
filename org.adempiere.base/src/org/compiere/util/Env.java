@@ -134,6 +134,7 @@ public final class Env
 	public static final String STANDARD_PRECISION = "#StdPrecision";
 	public static final String STANDARD_REPORT_FOOTER_TRADEMARK_TEXT = "#STANDARD_REPORT_FOOTER_TRADEMARK_TEXT";
 	public static final String SYSTEM_NAME = "#System_Name";
+	public static final String THEME = "#Theme";
 	public static final String UI_CLIENT = "#UIClient";
 	public static final String USER_LEVEL = "#User_Level";
 
@@ -153,6 +154,7 @@ public final class Env
 	 * @param provider
 	 * @deprecated
 	 */
+	@Deprecated
 	public static void setContextProvider(ContextProvider provider)
 	{
 	}
@@ -602,7 +604,10 @@ public final class Env
 				retValue = "";
 			return retValue;
 		}
-		return ctx.getProperty(context, "");
+		String value = ctx.getProperty(context, "");
+		if (Util.isEmpty(value) && !context.startsWith("#"))
+			value = ctx.getProperty("#"+context, "");
+		return value;
 	}	//	getContext
 
 	/**
@@ -2158,6 +2163,7 @@ public final class Env
 	 *   VAR='VALUE'
 	 *  The + prefix is not required, is added here to the defined variables.
 	 * </pre>
+	 * NOTE that any line that doesn't contain an equal sign (=) is ignored, can be used simply as a comment
 	 * @param ctx
 	 * @param windowNo window number or -1 to global level
 	 * @param predefinedVariables

@@ -93,7 +93,8 @@
 	content: "\f050";
 }
 .z-icon-FieldSuggestion:before {
-	content: "\f0e5";
+	content: "\e2ca";
+	font-weight: 900;
 }
 .z-icon-FileImport:before {
 	content: "\f0ee";
@@ -389,6 +390,9 @@
 .z-icon-UnSort:before {
 	content: "\f074";
 	font-weight: 900;
+}
+.z-icon-File:before {
+	content: "\f15b";
 }
 .z-icon-VPreference:before {
 	content: "\f039";

@@ -20,6 +20,7 @@ import org.adempiere.webui.component.Anchorlayout;
 import org.adempiere.webui.component.Menupopup;
 import org.adempiere.webui.desktop.IDesktop;
 import org.adempiere.webui.event.ZoomEvent;
+import org.adempiere.webui.theme.ThemeManager;
 import org.adempiere.webui.util.ZKUpdateUtil;
 import org.adempiere.webui.window.WCtxHelpSuggestion;
 import org.compiere.model.GridField;
@@ -727,9 +728,9 @@ public class HelpController
     		} else {
             	pnlQuickInfo.setVisible(true);
             	StringBuilder sb = new StringBuilder();
-            	sb.append("<html>\n<body>\n<div class=\"help-content\">\n");
+            	sb.append("<div class=\"help-content\">\n");
        			sb.append(widget);
-            	sb.append("</div>\n</body>\n</html>");
+            	sb.append("</div>\n");
             	htmlQuickInfo.setContent(sb.toString());
     		}
     	}
@@ -834,6 +835,10 @@ public class HelpController
 			} else {
 				item.setLabel(Msg.getElement(Env.getCtx(), "AD_CtxHelpSuggestion_ID"));
 			}
+			if (ThemeManager.isUseFontIconForImage())
+				item.setIconSclass("z-icon-FieldSuggestion");
+			else
+				item.setImage(ThemeManager.getThemeResource("images/FieldSuggestion16.png"));
 			appendChild(item);
 			item.addEventListener(Events.ON_CLICK, this);
 		}

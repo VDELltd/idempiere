@@ -405,6 +405,15 @@ public class ProcessParameterPanel extends Panel implements
 		if (hasFields) {
 			centerPanel.appendChild(rows);
 			dynamicDisplay();
+
+			if (m_processInfo.getAD_Process_ID() > 0) {
+				String className = MProcess.get(Env.getCtx(), m_processInfo.getAD_Process_ID()).getClassname();
+
+				List<IProcessParameterListener> listeners = Extensions.getProcessParameterListeners(className, null);
+				for(IProcessParameterListener listener : listeners)
+					listener.onInit(this);
+			}
+
 		} else
 			dispose();
 		return hasFields;
@@ -1447,7 +1456,7 @@ public class ProcessParameterPanel extends Panel implements
 
 	@Override
 	public String get_ValueAsString(String variableName) {
-		DefaultEvaluatee evaluatee = new DefaultEvaluatee(new FieldEditorDataProvider());
+		DefaultEvaluatee evaluatee = new DefaultEvaluatee(new FieldEditorDataProvider(), m_WindowNo, m_TabNo);
 		return evaluatee.get_ValueAsString(variableName);				
 	}
 

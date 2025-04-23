@@ -87,9 +87,6 @@ public class CompositeADTabbox extends AbstractADTabbox
 	/** List of all tab **/
     private List<ADTabListModel.ADTabLabel> tabLabelList = new ArrayList<ADTabListModel.ADTabLabel>();
     
-    /** List of all tab panel **/
-    private List<IADTabpanel> tabPanelList = new ArrayList<IADTabpanel>();
-
     /** main layout component **/
     private Vlayout layout;
 
@@ -422,7 +419,6 @@ public class CompositeADTabbox extends AbstractADTabbox
     	ADTabListModel.ADTabLabel tabLabel = new ADTabListModel.ADTabLabel(gTab.getName(), gTab.getTabLevel(), gTab.getDescription(),
         		gTab.getWindowNo(), gTab.getAD_Tab_ID());
         tabLabelList.add(tabLabel);
-        tabPanelList.add(tabPanel);
         
         tabPanel.setTabNo(tabPanelList.size()-1);
         
@@ -1067,7 +1063,7 @@ public class CompositeADTabbox extends AbstractADTabbox
 			if (!tabPanel.getGridTab().isSortTab()) {
 				currentRow = tabPanel.getGridTab().getCurrentRow();
 			}
-			tabPanel.query(false, 0, 0);			
+			tabPanel.query(false, 0, tabPanel.getGridTab().getMaxQueryRecords());
 			if (currentRow >= 0 && currentRow != tabPanel.getGridTab().getCurrentRow() 
 				&& currentRow < tabPanel.getGridTab().getRowCount()) {
 				tabPanel.getGridTab().setCurrentRow(currentRow, false);

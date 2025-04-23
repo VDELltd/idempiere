@@ -88,6 +88,7 @@ import org.compiere.model.MProcess;
 import org.compiere.model.MRefTable;
 import org.compiere.model.MRole;
 import org.compiere.model.MStatusLine;
+import org.compiere.model.MStyle;
 import org.compiere.model.MSysConfig;
 import org.compiere.model.MTable;
 import org.compiere.model.X_AD_CtxHelp;
@@ -96,6 +97,7 @@ import org.compiere.process.ProcessInfoLog;
 import org.compiere.process.ProcessInfoUtil;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
+import org.compiere.util.DefaultEvaluatee;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.KeyNamePair;
@@ -146,7 +148,7 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
 	protected static final String INFO_QUERY_TIME_OUT_ERROR = "InfoQueryTimeOutError";
 	protected static final String COLUMN_VISIBLE_ORIGINAL = "column.visible.original";
 	protected static final String ROW_CTX_VARIABLE_PREFIX = "_IWInfo_";
-	protected static final String ROW_ID_CTX_VARIABLE_NAME = "_IWInfoIDs_Selected";
+	public static final String ROW_ID_CTX_VARIABLE_NAME = "_IWInfoIDs_Selected";
 	
 	private final static int DEFAULT_PAGE_SIZE = 100;
 	private final static int DEFAULT_PAGE_PRELOAD = 4;
@@ -1739,6 +1741,7 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
 	 *  @deprecated use getSaveKeys
 	 *  @return selected keys (Integers)
 	 */
+    @Deprecated
 	public Collection<Object> getSelectedKeysCollection()
 	{
 		m_ok = true;
@@ -2604,27 +2607,21 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
 	            form.setAttribute(Window.MODE_KEY, form.getWindowMode());
 	            form.setAttribute(Window.INSERT_POSITION_KEY, Window.INSERT_NEXT);
 
+	            form.addEventListener(DialogEvents.ON_WINDOW_CLOSE, new EventListener<Event>() {
+                    @Override
+                    public void onEvent(Event event) throws Exception {
+                        updateListSelected();
+                        recordSelectedData.clear();
+                        Clients.response(new AuEcho(InfoPanel.this, "onQueryCallback", null));
+                        onUserQuery();
+                    }
+                });
+
 	            if (mode == Mode.HIGHLIGHTED || mode == Mode.MODAL) {
-	                form.addEventListener(DialogEvents.ON_WINDOW_CLOSE, new EventListener<Event>() {
-	                    @Override
-	                    public void onEvent(Event event) throws Exception {
-	                        ;
-	                    }
-	                });
 	                form.doHighlighted();
 	                form.focus();
 	            }
 	            else {
-	                form.addEventListener(DialogEvents.ON_WINDOW_CLOSE, new EventListener<Event>() {
-	                    @Override
-	                    public void onEvent(Event event) throws Exception {
-	                        updateListSelected();
-	                        recordSelectedData.clear();
-	                        Clients.response(new AuEcho(InfoPanel.this, "onQueryCallback", null));
-	                        onUserQuery();
-	                    }
-	                });
-
 	                SessionManager.getAppDesktop().showWindow(form);
 	            }
 	            return;
@@ -3400,7 +3397,25 @@ public abstract class InfoPanel extends Window implements EventListener<Event>, 
 			for (MStatusLine wl : wls) {
 				String line = wl.parseLine(getWindowNo());
 				if (line != null) {
-					lines.append(line).append("<br>");
+					if (wl.getAD_Style_ID() > 0) {
+			    		MStyle style = MStyle.get(wl.getAD_Style_ID());
+						String css = style.buildStyle(Env.getContext(Env.getCtx(), Env.THEME), new DefaultEvaluatee(), false);				
+						if (!Util.isEmpty(css, true)) {
+							lines.append("<div>\n")
+								.append("<style>\n")
+								.append("@scope {\n")
+								.append(css)
+								.append("\n}\n")
+								.append("</style>\n")
+								.append(line)
+								.append("\n")
+								.append("</div>\n");
+						} else {
+							lines.append(line).append("<br>");
+						}
+		    		} else {
+		    			lines.append(line).append("<br>");
+		    		}
 				}
 			}
 			if (lines.length() > 0)

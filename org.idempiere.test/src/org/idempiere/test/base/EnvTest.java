@@ -258,6 +258,11 @@ public class EnvTest extends AbstractTestCase {
 		expr = "@C_BPartner_ID:0.Created<yyyy-MM-dd>@='"+created+"'";
 		evaluation = Evaluator.evaluateLogic(evaluatee, expr);
 		assertTrue(evaluation, "Unexpected logic evaluation result");
+
+		//@AD_Client_ID@
+		expr = "@AD_Client_ID@";
+		parsedText = Env.parseContext(Env.getCtx(), -1, expr, false, true); // like in GridFieldVO parsing ColumnSQL
+		assertEquals("11", parsedText, "Unexpected parsed text for "+expr);
 		
 		//custom context
 		Properties ctx = new Properties();
@@ -275,6 +280,15 @@ public class EnvTest extends AbstractTestCase {
 		expr = "C_BPartner.C_BPartner_ID=@#C_BPartner_ID@";
 		parsedText = MRelationType.parseWhereClause(inout, expr);
 		assertEquals("C_BPartner.C_BPartner_ID="+inout.getC_BPartner_ID(), parsedText, "Failed to get value from custom context");
+
+		// Import CSV Process uses window -1 for the context
+		//M_Warehouse.AD_Org_ID=@NonExisting_AD_Org_ID@
+		Env.setContext(Env.getCtx(), "#NonExisting_AD_Org_ID", 0);
+		Env.setContext(Env.getCtx(), -1, "NonExisting_AD_Org_ID", 11);
+		Env.setContext(Env.getCtx(), -1, 0, "NonExisting_AD_Org_ID", 11);
+		String validationCode = "M_Warehouse.AD_Org_ID=@NonExisting_AD_Org_ID@";
+		String dynamicValid = Env.parseContext(Env.getCtx(), -1, 0, validationCode, false);
+		assertEquals("M_Warehouse.AD_Org_ID=11", dynamicValid, "Unexpected parsed text for "+validationCode);
 	}
 
 	@Test
