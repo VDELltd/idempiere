@@ -320,7 +320,9 @@ public class ConfigOracle implements IDatabaseConfig
 		}
 		if (monitor != null)
 			monitor.update(new DBConfigStatus(DBConfigStatus.DATABASE_SERVER, "ErrorDatabaseServer",
-				pass, false, error));
+				pass, true, error));
+		if (!pass)
+			return error;
 		if (log.isLoggable(Level.INFO)) log.info("OK: Database Server = " + databaseServer);
 		data.setProperty(ConfigurationData.ADEMPIERE_DB_SERVER, databaseServer!=null ? databaseServer.getHostName() : "");
 		//store as lower case for better script level backward compatibility
